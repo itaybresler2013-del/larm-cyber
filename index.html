@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Cyber - פלטפורמת לימוד תכנות</title>
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/global.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/student-dashboard.css">
+    <link rel="stylesheet" href="css/quiz.css">
+    <link rel="stylesheet" href="css/sandbox.css">
+    <link rel="stylesheet" href="admin/admin.css">
+    
+    <!-- Firebase SDK & JS -->
+    <script type="module" src="js/firebase-init.js" defer></script>
+    <script src="js/particles.js" defer></script>
+    <script src="js/anti-cheat.js" defer></script>
+    <script type="module" src="js/auth.js" defer></script>
+    <script type="module" src="js/student-app.js" defer></script>
+    <script src="js/quiz.js" defer></script>
+    <script src="js/sandbox.js" defer></script>
+    <script src="admin/admin.js" defer></script>
+    <script type="module" src="js/spa-router.js" defer></script>
+</head>
+<body class="spa-body">
+    <!-- Particles Background -->
+    <canvas id="particles-bg"></canvas>
+
+    <!-- VIEWS CONTAINER -->
+    <div id="app-container">
+
+        <!-- =======================
+             PROMO VIEW
+        ======================== -->
+        <div id="view-promo" class="app-view">
+            <div id="promo-screen" class="promo-container">
+                <div class="promo-content">
+                    <h1 class="promo-text text-neon-blue fade-in" id="promo-text-1">לא רק ללמוד תכנות...</h1>
+                    <h1 class="promo-text text-neon-purple hidden fade-in" id="promo-text-2">להפוך למאסטר.</h1>
+                    
+                    <div class="skills-showcase hidden" id="promo-skills">
+                        <div class="skill-card text-neon-blue">HTML <span class="xp">+100 XP</span></div>
+                        <div class="skill-card text-neon-purple">CSS <span class="xp">+150 XP</span></div>
+                        <div class="skill-card text-neon-pink">JS <span class="xp">+300 XP</span></div>
+                    </div>
+
+                    <h2 class="promo-final text-neon-blue hidden fade-in" id="promo-text-3">Learn. Build. Level Up.</h2>
+                    <button id="start-btn" class="btn-neon hidden fade-in mt-4">START NOW</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- =======================
+             LOGIN VIEW (#login)
+        ======================== -->
+        <div id="view-login" class="app-view hidden">
+            <div id="auth-screen" class="auth-container">
+                <div class="glass-panel auth-box fade-in">
+                    <h1 class="text-neon-blue text-center mb-2">NEON CYBER</h1>
+                    <p class="text-muted text-center mb-4">התחבר למערכת ותתחיל לצבור XP</p>
+                    
+                    <div class="auth-tabs">
+                        <button class="auth-tab active" id="tab-login">התחברות</button>
+                        <button class="auth-tab" id="tab-register">הרשמה</button>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form id="login-form" class="auth-form">
+                        <div class="input-group">
+                            <label>מספר טלפון</label>
+                            <input type="tel" id="login-phone" required placeholder="050-0000000">
+                        </div>
+                        <div class="input-group">
+                            <label>סיסמה</label>
+                            <input type="password" id="login-password" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn-neon w-100 mt-2">היכנס למשחק</button>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="register-form" class="auth-form hidden">
+                        <div class="input-group">
+                            <label>שם מלא (Gamer Tag)</label>
+                            <input type="text" id="register-name" required placeholder="CyberNinja99">
+                        </div>
+                        <div class="input-group">
+                            <label>מספר טלפון</label>
+                            <input type="tel" id="register-phone" required placeholder="050-0000000">
+                        </div>
+                        <div class="input-group">
+                            <label>סיסמה</label>
+                            <input type="password" id="register-password" required placeholder="••••••••">
+                        </div>
+                        <button type="submit" class="btn-neon purple w-100 mt-2">צור שחקן חדש</button>
+                    </form>
+
+                    <div id="auth-error" class="error-msg hidden mt-2"></div>
+                    <div id="auth-loader" class="loader hidden"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =======================
+             LARN / DASHBOARD VIEW (#larn)
+        ======================== -->
+        <div id="view-larn" class="app-view hidden">
+            <!-- Top Navigation / Status Bar -->
+            <nav class="glass-panel top-bar">
+                <div class="user-profile">
+                    <div class="avatar-glow">
+                        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=Player1&backgroundColor=00f3ff" alt="Avatar" id="user-avatar">
+                    </div>
+                    <div class="user-info">
+                        <h2 id="user-name" class="text-neon-blue">CyberPlayer</h2>
+                        <div class="level-badge text-neon-purple">רמה <span id="user-level">1</span></div>
+                    </div>
+                </div>
+
+                <div class="xp-container">
+                    <div class="xp-text">
+                        <span id="user-xp" class="text-neon-green">0</span> XP
+                        <span class="next-level text-muted"> / <span id="next-level-xp">1000</span> לדרגה הבאה</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="xp-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <div class="top-actions">
+                    <button class="btn-icon" title="הישגים" id="btn-achievements">🏆</button>
+                    <button class="btn-icon" title="Leaderboard" id="btn-leaderboard">🏅</button>
+                    <button class="btn-icon text-neon-pink" title="התנתק" id="btn-logout">🚪</button>
+                </div>
+            </nav>
+
+            <!-- Main Dashboard -->
+            <main class="dashboard-main" id="dashboard-view">
+                <section class="missions-section fade-in">
+                    <h3 class="text-neon-purple mb-2">משימות יומיות</h3>
+                    <div class="missions-grid">
+                        <div class="glass-panel mission-card">
+                            <h4>התחברות יומית</h4>
+                            <p class="text-muted">+50 XP</p>
+                            <button class="btn-neon small" id="claim-daily">אסוף פרס</button>
+                        </div>
+                        <div class="glass-panel mission-card">
+                            <h4>סיים שיעור HTML</h4>
+                            <p class="text-muted">+100 XP</p>
+                            <div class="status text-neon-blue">0/1</div>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="actions-grid fade-in mt-4">
+                    <div class="glass-panel action-card" id="btn-learn">
+                        <div class="card-icon text-neon-blue">📚</div>
+                        <h3>התחל ללמוד</h3>
+                        <p>למד HTML, CSS, JavaScript</p>
+                    </div>
+                    <a href="#quiz" style="text-decoration: none;">
+                        <div class="glass-panel action-card">
+                            <div class="card-icon text-neon-pink">⚔️</div>
+                            <h3>מבחן רמה (Boss Fight)</h3>
+                            <p>בחן את הידע שלך והרוויח XP</p>
+                        </div>
+                    </a>
+                    <a href="#sandbox" style="text-decoration: none;">
+                        <div class="glass-panel action-card">
+                            <div class="card-icon text-neon-purple">💻</div>
+                            <h3>Sandbox</h3>
+                            <p>אזור אימון פתוח לקוד</p>
+                        </div>
+                    </a>
+                </section>
+            </main>
+
+            <!-- Learning View (Hidden by default) -->
+            <main class="learning-main hidden" id="learning-view">
+                <button class="btn-neon small mb-4" id="back-to-dashboard">🔙 חזור לראשי</button>
+                <h2 class="text-neon-blue mb-4">בחר מיומנות (Skill)</h2>
+                
+                <div class="skills-grid">
+                    <div class="glass-panel skill-card-large" data-skill="html">
+                        <h3 class="text-neon-blue">HTML</h3>
+                        <p>יסודות בניית האתרים</p>
+                        <div class="progress-bar-bg mt-2"><div class="progress-bar-fill" style="width: 10%;"></div></div>
+                    </div>
+                    <div class="glass-panel skill-card-large" data-skill="css">
+                        <h3 class="text-neon-purple">CSS</h3>
+                        <p>עיצוב ואנימציות</p>
+                        <div class="progress-bar-bg mt-2"><div class="progress-bar-fill purple" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="glass-panel skill-card-large" data-skill="js">
+                        <h3 class="text-neon-pink">JavaScript</h3>
+                        <p>לוגיקה ואינטראקטיביות</p>
+                        <div class="progress-bar-bg mt-2"><div class="progress-bar-fill pink" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- =======================
+             QUIZ VIEW (#quiz)
+        ======================== -->
+        <div id="view-quiz" class="app-view hidden quiz-body">
+            <div id="quiz-intro" class="quiz-container flex-center fade-in">
+                <h1 class="text-neon-pink pulse">Boss Fight - מבחן מסכם</h1>
+                <p class="text-muted mb-4">15 שאלות. זמן מוגבל. תוכיח את הידע שלך והרוויח XP רב!</p>
+                <button id="start-quiz-btn" class="btn-neon mt-4">התחל קרב</button>
+                <a href="#larn"><button class="btn-neon purple mt-2">🔙 חזור</button></a>
+            </div>
+
+            <div id="quiz-area" class="quiz-container hidden">
+                <div class="quiz-header glass-panel">
+                    <div class="timer text-neon-pink" id="timer">05:00</div>
+                    <div class="progress text-neon-blue">שאלה <span id="current-q">1</span>/15</div>
+                    <div class="score-display text-neon-green"><span id="score-val">0</span> נק'</div>
+                </div>
+
+                <div class="quiz-card glass-panel fade-in" id="question-card">
+                    <h2 id="question-text" class="mb-4">טוען שאלה...</h2>
+                    <div class="options-grid" id="options-container"></div>
+                </div>
+                
+                <div id="feedback" class="feedback hidden"></div>
+            </div>
+
+            <div id="quiz-result" class="quiz-container flex-center hidden">
+                <h1 class="text-neon-blue mb-2" id="result-title">הקרב הסתיים!</h1>
+                <div class="glass-panel result-card mb-4">
+                    <h2 class="text-neon-green">תוצאה: <span id="final-score">0</span>%</h2>
+                    <p class="text-neon-purple mt-2">הרווחת: <span id="earned-xp">0</span> XP</p>
+                </div>
+                <a href="#larn"><button class="btn-neon">חזור לאזור אישי</button></a>
+            </div>
+        </div>
+
+        <!-- =======================
+             SANDBOX VIEW (#sandbox)
+        ======================== -->
+        <div id="view-sandbox" class="app-view hidden">
+            <div class="sandbox-layout" style="height: 100vh;">
+                <!-- Header -->
+                <header class="sandbox-header glass-panel">
+                    <div class="header-left">
+                        <a href="#larn"><button class="btn-icon">🔙</button></a>
+                        <h2 class="text-neon-blue">Sandbox Mode</h2>
+                    </div>
+                    <div class="header-right">
+                        <button id="btn-run" class="btn-neon small">▶ Run Code</button>
+                        <button id="btn-reset" class="btn-neon small purple">↺ Reset</button>
+                    </div>
+                </header>
+
+                <!-- Main Content -->
+                <main class="sandbox-main">
+                    <div class="editor-area">
+                        <div class="tabs">
+                            <button class="tab-btn active" data-target="html-editor">HTML</button>
+                            <button class="tab-btn" data-target="css-editor">CSS</button>
+                            <button class="tab-btn" data-target="js-editor">JavaScript</button>
+                        </div>
+                        <div class="editors">
+                            <textarea id="html-editor" class="code-input active" spellcheck="false">&lt;h1&gt;Hello Cyber World&lt;/h1&gt;</textarea>
+                            <textarea id="css-editor" class="code-input" spellcheck="false">h1 { color: #00f3ff; text-shadow: 0 0 10px #00f3ff; }</textarea>
+                            <textarea id="js-editor" class="code-input" spellcheck="false">console.log('System ready.');</textarea>
+                        </div>
+                    </div>
+                    <div class="preview-area">
+                        <h3 class="preview-title text-neon-purple">Live Preview</h3>
+                        <div class="preview-container glass-panel">
+                            <iframe id="preview-frame"></iframe>
+                        </div>
+                    </div>
+                    <aside class="ai-panel glass-panel">
+                        <div class="ai-header">
+                            <div class="ai-avatar">🤖</div>
+                            <h3 class="text-neon-pink">AI Assistant</h3>
+                        </div>
+                        <div class="ai-chat" id="ai-chat">
+                            <div class="message ai-msg">שלום אלוף! צריך עזרה עם הקוד?</div>
+                        </div>
+                        <div class="ai-input-area">
+                            <input type="text" id="ai-input" placeholder="שאל אותי משהו...">
+                            <button id="ai-send" class="btn-icon">➤</button>
+                        </div>
+                    </aside>
+                </main>
+            </div>
+        </div>
+
+        <!-- =======================
+             ADMIN VIEW (#admin)
+        ======================== -->
+        <div id="view-admin" class="app-view hidden">
+            <div class="admin-body" style="height: 100vh;">
+                <!-- Admin Login -->
+                <div id="admin-login" class="admin-login-container fade-in">
+                    <div class="glass-panel auth-box">
+                        <h1 class="text-neon-pink text-center mb-2">SYSTEM OVERRIDE</h1>
+                        <p class="text-muted text-center mb-4">התחברות מנהל מערכת</p>
+                        <form id="admin-form" class="auth-form">
+                            <div class="input-group">
+                                <label>קוד גישה (Admin Key)</label>
+                                <input type="password" id="admin-key" required placeholder="••••••••">
+                            </div>
+                            <button type="submit" class="btn-neon purple w-100 mt-2">ACCESS SYSTEM</button>
+                        </form>
+                        <div id="admin-error" class="error-msg hidden mt-2">קוד שגוי. הגישה נדחתה.</div>
+                    </div>
+                </div>
+
+                <!-- Admin Dashboard -->
+                <div id="admin-dashboard" class="admin-layout hidden">
+                    <nav class="admin-sidebar glass-panel">
+                        <h2 class="text-neon-blue mb-4 text-center">NEON ADMIN</h2>
+                        <ul class="nav-links">
+                            <li class="active" data-target="dashboard">Dashboard</li>
+                            <li data-target="users">ניהול משתמשים</li>
+                            <li data-target="logs">לוגים - Anti-Cheat</li>
+                        </ul>
+                        <button id="admin-logout" class="btn-neon small mt-4 w-100">LOGOUT</button>
+                    </nav>
+
+                    <main class="admin-main">
+                        <section id="view-dashboard" class="admin-view active fade-in">
+                            <h2 class="text-neon-blue mb-4">Live Statistics</h2>
+                            <div class="stats-grid">
+                                <div class="stat-card glass-panel">
+                                    <h4 class="text-muted">משתמשים רשומים</h4>
+                                    <div class="stat-value text-neon-blue" id="stat-users">1</div>
+                                </div>
+                                <div class="stat-card glass-panel">
+                                    <h4 class="text-muted">אירועי רמאות</h4>
+                                    <div class="stat-value text-neon-pink" id="stat-cheats">0</div>
+                                </div>
+                                <div class="stat-card glass-panel">
+                                    <h4 class="text-muted">ממוצע ציונים</h4>
+                                    <div class="stat-value text-neon-green" id="stat-score">85%</div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="view-logs" class="admin-view hidden fade-in">
+                            <h2 class="text-neon-pink mb-4">Security Logs</h2>
+                            <div class="glass-panel table-container">
+                                <table class="admin-table">
+                                    <thead>
+                                        <tr>
+                                            <th>זמן</th>
+                                            <th>משתמש</th>
+                                            <th>אירוע</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="logs-body"></tbody>
+                                </table>
+                            </div>
+                        </section>
+                    </main>
+                </div>
+            </div>
+        </div>
+
+    </div> <!-- END OF APP CONTAINER -->
+
+    <!-- Achievement Popup -->
+    <div id="achievement-popup" class="achievement-popup hidden">
+        <div class="icon">🏆</div>
+        <div class="content">
+            <h4>הישג חדש!</h4>
+            <p id="achievement-text">התחברות ראשונה</p>
+        </div>
+    </div>
+</body>
+</html>
