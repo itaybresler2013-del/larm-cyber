@@ -1,0 +1,106 @@
+.quiz-body {
+    background: radial-gradient(circle at center, #1a0b2e 0%, var(--bg-darker) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.quiz-container {
+    width: 100%;
+    max-width: 800px;
+    padding: 20px;
+}
+
+.flex-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.pulse {
+    animation: pulseText 1.5s infinite;
+}
+
+@keyframes pulseText {
+    0% { transform: scale(1); text-shadow: 0 0 10px var(--neon-pink); }
+    50% { transform: scale(1.05); text-shadow: 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink); }
+    100% { transform: scale(1); text-shadow: 0 0 10px var(--neon-pink); }
+}
+
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 30px;
+    margin-bottom: 30px;
+    font-size: 1.5rem;
+    font-family: 'Orbitron', sans-serif;
+    border-color: var(--neon-blue);
+}
+
+.quiz-card {
+    padding: 40px;
+    text-align: center;
+    border-color: var(--neon-purple);
+    box-shadow: var(--glow-box-purple);
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.option-btn {
+    background: rgba(0,0,0,0.5);
+    border: 1px solid var(--glass-border);
+    padding: 15px;
+    border-radius: 8px;
+    color: white;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: 0.3s;
+    font-family: 'Rajdhani', sans-serif;
+}
+
+.option-btn:hover {
+    background: rgba(0, 243, 255, 0.2);
+    border-color: var(--neon-blue);
+    box-shadow: 0 0 10px rgba(0, 243, 255, 0.5);
+    transform: translateY(-2px);
+}
+
+.option-btn.correct {
+    background: rgba(0, 255, 102, 0.2);
+    border-color: var(--neon-green);
+    box-shadow: 0 0 15px rgba(0, 255, 102, 0.5);
+}
+
+.option-btn.wrong {
+    background: rgba(255, 0, 127, 0.2);
+    border-color: var(--neon-pink);
+    box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
+}
+
+.feedback {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 1.5rem;
+    font-weight: bold;
+    animation: fadeIn 0.3s ease;
+}
+
+.feedback.correct { color: var(--neon-green); text-shadow: 0 0 10px var(--neon-green); }
+.feedback.wrong { color: var(--neon-pink); text-shadow: 0 0 10px var(--neon-pink); }
+
+.result-card {
+    padding: 40px;
+    min-width: 300px;
+}

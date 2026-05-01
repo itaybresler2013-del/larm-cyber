@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Cyber - Boss Fight (Quiz)</title>
+    <link rel="stylesheet" href="/css/global.css">
+    <link rel="stylesheet" href="/css/quiz.css">
+    <script src="/js/anti-cheat.js" defer></script>
+    <script src="/js/quiz.js" defer></script>
+</head>
+<body class="quiz-body">
+    <div id="quiz-intro" class="quiz-container flex-center fade-in">
+        <h1 class="text-neon-pink pulse">Boss Fight - מבחן מסכם</h1>
+        <p class="text-muted mb-4">15 שאלות. זמן מוגבל. תוכיח את הידע שלך והרוויח XP רב!</p>
+        <button id="start-quiz-btn" class="btn-neon mt-4">התחל קרב</button>
+        <button class="btn-neon purple mt-2" onclick="window.location.href='/larn'">🔙 חזור</button>
+    </div>
+
+    <div id="quiz-area" class="quiz-container hidden">
+        <div class="quiz-header glass-panel">
+            <div class="timer text-neon-pink" id="timer">05:00</div>
+            <div class="progress text-neon-blue">שאלה <span id="current-q">1</span>/15</div>
+            <div class="score-display text-neon-green"><span id="score-val">0</span> נק'</div>
+        </div>
+
+        <div class="quiz-card glass-panel fade-in" id="question-card">
+            <h2 id="question-text" class="mb-4">טוען שאלה...</h2>
+            <div class="options-grid" id="options-container">
+                <!-- Options will be injected here -->
+            </div>
+        </div>
+        
+        <div id="feedback" class="feedback hidden"></div>
+    </div>
+
+    <div id="quiz-result" class="quiz-container flex-center hidden">
+        <h1 class="text-neon-blue mb-2" id="result-title">הקרב הסתיים!</h1>
+        <div class="glass-panel result-card mb-4">
+            <h2 class="text-neon-green">תוצאה: <span id="final-score">0</span>%</h2>
+            <p class="text-neon-purple mt-2">הרווחת: <span id="earned-xp">0</span> XP</p>
+        </div>
+        <button class="btn-neon" onclick="window.location.href='/larn'">חזור לאזור אישי</button>
+    </div>
+</body>
+</html>
