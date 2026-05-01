@@ -1,0 +1,115 @@
+/* =======================
+   ADMIN DASHBOARD CSS
+======================== */
+
+.admin-login-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(188, 19, 254, 0.1) 0%, transparent 60%);
+}
+
+.admin-layout {
+    display: flex;
+    height: 100vh;
+}
+
+.admin-sidebar {
+    width: 250px;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    border-radius: 0;
+    border-left: 1px solid var(--glass-border);
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+}
+
+.nav-links {
+    list-style: none;
+    flex: 1;
+    margin-top: 20px;
+}
+
+.nav-links li {
+    padding: 12px 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-family: var(--font-heading);
+    color: var(--text-muted);
+}
+
+.nav-links li:hover {
+    background: rgba(255,255,255,0.05);
+    color: white;
+}
+
+.nav-links li.active {
+    background: rgba(0, 243, 255, 0.1);
+    color: var(--neon-blue);
+    border-right: 3px solid var(--neon-blue); /* RTL indicator */
+}
+
+.admin-main {
+    flex: 1;
+    padding: 40px;
+    overflow-y: auto;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+}
+
+.stat-card {
+    padding: 30px;
+    text-align: center;
+    border-top: 3px solid transparent;
+}
+
+.stat-card:nth-child(1) { border-color: var(--neon-blue); }
+.stat-card:nth-child(2) { border-color: var(--neon-pink); }
+.stat-card:nth-child(3) { border-color: var(--neon-green); }
+
+.stat-card .stat-value {
+    font-size: 3rem;
+    font-family: var(--font-heading);
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.table-container {
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+}
+
+.admin-table th, .admin-table td {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.admin-table th {
+    color: var(--neon-purple);
+    font-family: var(--font-heading);
+    font-weight: normal;
+}
+
+.admin-table tr:hover {
+    background: rgba(255,255,255,0.02);
+}
+
+.admin-table .warning {
+    color: var(--neon-pink);
+    font-weight: bold;
+}

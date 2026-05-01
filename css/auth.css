@@ -1,0 +1,134 @@
+/* =======================
+   PROMO & AUTH VIEWS CSS
+======================== */
+
+/* Promo View */
+.promo-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    background: radial-gradient(circle at center, rgba(0, 243, 255, 0.1) 0%, transparent 60%);
+}
+
+.promo-text {
+    font-size: 3.5rem;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    font-weight: 900;
+    letter-spacing: 3px;
+}
+
+.promo-final {
+    font-size: 2.5rem;
+    margin-top: 40px;
+    text-transform: uppercase;
+}
+
+.skills-showcase {
+    display: flex;
+    gap: 30px;
+    margin: 40px 0;
+    justify-content: center;
+}
+
+.skill-card {
+    background: rgba(10, 10, 20, 0.8);
+    border: 2px solid;
+    padding: 20px 40px;
+    border-radius: 12px;
+    font-family: var(--font-heading);
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 0 20px currentColor;
+    transform: translateY(0);
+    animation: float 3s ease-in-out infinite;
+}
+
+.skill-card:nth-child(1) { animation-delay: 0s; border-color: var(--neon-blue); }
+.skill-card:nth-child(2) { animation-delay: 0.2s; border-color: var(--neon-purple); }
+.skill-card:nth-child(3) { animation-delay: 0.4s; border-color: var(--neon-pink); }
+
+.skill-card .xp {
+    font-size: 0.9rem;
+    color: var(--neon-green);
+    text-shadow: 0 0 5px var(--neon-green);
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-15px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Auth View */
+.auth-container {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top right, rgba(188, 19, 254, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at bottom left, rgba(0, 243, 255, 0.15) 0%, transparent 50%);
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 450px;
+    padding: 40px 30px;
+    border-top: 4px solid var(--neon-blue);
+}
+
+.auth-tabs {
+    display: flex;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.auth-tab {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    padding: 12px 0;
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+}
+
+.auth-tab.active {
+    color: var(--neon-blue);
+    text-shadow: 0 0 10px var(--neon-blue);
+}
+
+.auth-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--neon-blue);
+    box-shadow: 0 0 10px var(--neon-blue);
+}
+
+.auth-tab:hover:not(.active) {
+    color: white;
+}
+
+.error-msg {
+    color: #ff3333;
+    text-align: center;
+    font-size: 0.9rem;
+    background: rgba(255, 51, 51, 0.1);
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ff3333;
+}
