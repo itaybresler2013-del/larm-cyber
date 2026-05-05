@@ -1,1 +1,522 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CYBER LEARN — פלטפורמת לימוד עתידנית</title>
+  <link rel="stylesheet" href="app.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap"
+    rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+  <canvas id="particles-canvas"></canvas>
+  <div class="scan-line"></div>
+
+  <!-- LOADING SCREEN -->
+  <div id="loading-screen">
+    <div class="loader-box">
+      <div class="loader-logo" data-text="CYBER LEARN">CYBER LEARN</div>
+      <div class="loader-bar">
+        <div class="loader-fill" id="loader-fill"></div>
+      </div>
+      <div class="loader-status" id="loader-status">INITIALIZING SYSTEM...</div>
+      <div class="loader-dots"><span></span><span></span><span></span></div>
+    </div>
+  </div>
+
+  <!-- ACHIEVEMENT TOAST -->
+  <div id="ach-toast" class="ach-toast hidden">
+    <div class="ach-toast-icon" id="ach-toast-icon">🏆</div>
+    <div class="ach-toast-body">
+      <div class="ach-toast-title">הישג חדש!</div>
+      <div class="ach-toast-name" id="ach-toast-name">First Blood</div>
+    </div>
+    <div class="ach-toast-xp" id="ach-toast-xp">+100 XP</div>
+  </div>
+
+  <!-- XP FLOAT -->
+  <div id="xp-float" class="xp-float hidden"></div>
+
+  <!-- NOTIF -->
+  <div id="notif" class="notif hidden"></div>
+
+  <!-- =========================================
+     AUTH SECTION
+     ========================================= -->
+  <div id="auth-section" class="hidden">
+    <div class="auth-wrap">
+      <div class="auth-card glass-card">
+        <div class="auth-logo">CYBER<span>LEARN</span></div>
+        <div class="auth-tagline">למד • בנה • עלה רמה</div>
+        <div class="auth-tabs">
+          <button class="atab active" id="tab-login" onclick="showTab('login')">כניסה</button>
+          <button class="atab" id="tab-reg" onclick="showTab('register')">הרשמה</button>
+        </div>
+
+        <!-- LOGIN -->
+        <form id="login-form" class="aform" onsubmit="doLogin(event)">
+          <div class="fg">
+            <label>קוד גישה (6 תווים)</label>
+            <input type="password" id="l-pass" placeholder="••••••" maxlength="6" minlength="6" required
+              autocomplete="current-password">
+          </div>
+          <div class="form-err hidden" id="l-err"></div>
+          <button type="submit" class="btn-neon w100">
+            <span>כנס למערכת ⚡</span>
+            <div class="btn-glow"></div>
+          </button>
+        </form>
+
+        <!-- REGISTER -->
+        <form id="reg-form" class="aform hidden" onsubmit="doRegister(event)">
+          <div class="fg">
+            <label>שם משתמש</label>
+            <input type="text" id="r-name" placeholder="הכינוי שלך במשחק" required autocomplete="username">
+          </div>
+          <div class="fg">
+            <label>קוד גישה (6 תווים בדיוק)</label>
+            <input type="password" id="r-pass" placeholder="••••••" maxlength="6" minlength="6" required
+              autocomplete="new-password">
+          </div>
+          <div class="form-err hidden" id="r-err"></div>
+          <button type="submit" class="btn-neon w100">
+            <span>הצטרף לקרב! 🚀</span>
+            <div class="btn-glow"></div>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================
+     MAIN APP
+     ========================================= -->
+  <div id="main-app" class="hidden">
+
+    <!-- NAV -->
+    <nav id="main-nav">
+      <div class="nav-logo" onclick="go('home')">CYBER<span>LEARN</span></div>
+      <div class="nav-links" id="nav-links">
+        <a class="nlink" data-page="home" onclick="go('home')">🏠 בית</a>
+        <a class="nlink" data-page="learn" onclick="go('learn')">📚 למד</a>
+        <a class="nlink" data-page="quiz" onclick="go('quiz')">⚔️ מבחן</a>
+        <a class="nlink" data-page="sandbox" onclick="go('sandbox')">🔧 Sandbox</a>
+        <a class="nlink admin-link hidden" data-page="admin" onclick="go('admin')">⚙️ Admin</a>
+      </div>
+      <div class="nav-right">
+        <div class="nav-lv" id="nav-lv">LV.1</div>
+        <div class="nav-xpbar">
+          <div class="nav-xpfill" id="nav-xpfill"></div>
+        </div>
+        <div class="nav-avatar" id="nav-avatar" onclick="go('profile')">?</div>
+        <button class="btn-logout" onclick="doLogout()" title="התנתק">⏏</button>
+      </div>
+      <button class="nav-burger" onclick="toggleNav()">☰</button>
+    </nav>
+
+    <!-- ============ HOME ============ -->
+    <section id="page-home" class="page">
+      <div class="pcontent">
+
+        <div class="welcome-banner glass-card">
+          <div>
+            <div class="welcome-title">ברוך הבא, <span id="h-name">Player</span>!</div>
+            <div class="welcome-sub">המשך את המסע שלך לשליטה בקוד</div>
+          </div>
+          <div class="hstats">
+            <div class="hstat">
+              <div class="hstat-val" id="h-streak">0</div>
+              <div class="hstat-lbl">🔥 ימים</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-val" id="h-lessons">0</div>
+              <div class="hstat-lbl">✅ שיעורים</div>
+            </div>
+            <div class="hstat">
+              <div class="hstat-val" id="h-rank">#--</div>
+              <div class="hstat-lbl">🏆 דירוג</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="level-card glass-card">
+          <div class="lc-left">
+            <div class="lv-badge" id="h-lv-badge">LV.1</div>
+            <div class="rank-title" id="h-rank-title">ROOKIE</div>
+          </div>
+          <div class="lc-right">
+            <div class="xpbar-wrap">
+              <div class="xpbar">
+                <div class="xpfill" id="h-xpfill" style="width:0%"></div>
+              </div>
+            </div>
+            <div class="xp-nums"><span id="h-xp">0</span> / <span id="h-xp-max">100</span> XP</div>
+            <div class="next-rank">הבא: <span id="h-next-rank">WARRIOR</span></div>
+          </div>
+        </div>
+
+        <div class="quick-btns">
+          <button class="qbtn btn-neon" onclick="go('learn')"><span>📚 התחל ללמוד</span>
+            <div class="btn-glow"></div>
+          </button>
+          <button class="qbtn btn-neon btn-purple" onclick="go('quiz')"><span>⚔️ מבחן</span>
+            <div class="btn-glow"></div>
+          </button>
+          <button class="qbtn btn-neon btn-green" onclick="go('sandbox')"><span>🔧 Sandbox</span>
+            <div class="btn-glow"></div>
+          </button>
+        </div>
+
+        <div class="home-grid">
+          <div class="glass-card missions-card">
+            <div class="card-hdr"><span class="card-ttl">🎯 Daily Missions</span><span class="card-badge"
+                id="mission-timer">--:--:--</span></div>
+            <div id="missions-list"></div>
+          </div>
+
+          <div class="glass-card lb-card">
+            <div class="card-hdr"><span class="card-ttl">🏆 Leaderboard</span><span class="card-badge">TOP 10</span>
+            </div>
+            <div id="lb-list">
+              <div class="spin"></div>
+            </div>
+          </div>
+
+          <div class="glass-card ach-card">
+            <div class="card-hdr"><span class="card-ttl">🎖️ הישגים</span><button class="btn-xs"
+                onclick="go('achievements')">הכל</button></div>
+            <div class="ach-grid" id="ach-grid"></div>
+          </div>
+
+          <div class="glass-card prog-card">
+            <div class="card-hdr"><span class="card-ttl">📊 התקדמות</span></div>
+            <div class="prog-list">
+              <div class="prog-row"><span>HTML</span>
+                <div class="pbar">
+                  <div class="pfill pfill-html" id="prog-html"></div>
+                </div><span id="prog-html-pct">0%</span>
+              </div>
+              <div class="prog-row"><span>CSS</span>
+                <div class="pbar">
+                  <div class="pfill pfill-css" id="prog-css"></div>
+                </div><span id="prog-css-pct">0%</span>
+              </div>
+              <div class="prog-row"><span>JS</span>
+                <div class="pbar">
+                  <div class="pfill pfill-js" id="prog-js"></div>
+                </div><span id="prog-js-pct">0%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LEARN ============ -->
+    <section id="page-learn" class="page hidden">
+      <div class="pcontent">
+
+        <div id="courses-view">
+          <div class="page-hdr">
+            <h1 class="page-ttl">📚 מרכז הלמידה</h1>
+            <div class="cat-tabs">
+              <button class="ctab active" onclick="showCat('html',this)">🏗️ HTML</button>
+              <button class="ctab" onclick="showCat('css',this)">🎨 CSS</button>
+              <button class="ctab" onclick="showCat('js',this)">⚡ JavaScript</button>
+            </div>
+          </div>
+          <div id="lessons-grid" class="lessons-grid"></div>
+        </div>
+
+        <div id="lesson-view" class="hidden">
+          <div class="lesson-hdr">
+            <button class="btn-back" onclick="backToCourses()">← חזרה</button>
+            <div class="lesson-hdr-mid">
+              <h2 id="lesson-ttl">שיעור</h2>
+              <div><span id="lesson-cat-badge" class="cat-badge">HTML</span><span id="lesson-xp-badge"
+                  class="xp-badge">+50 XP</span></div>
+            </div>
+            <div class="lesson-step-ind"><span id="ls-cur">1</span>/<span id="ls-tot">1</span></div>
+          </div>
+          <div id="lesson-body" class="lesson-body"></div>
+          <div class="lesson-nav">
+            <button class="btn-neon btn-sm" id="btn-prev" onclick="lessonNav(-1)" disabled>← הקודם</button>
+            <div id="step-dots" class="step-dots"></div>
+            <button class="btn-neon btn-sm" id="btn-next" onclick="lessonNav(1)">הבא →</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ QUIZ ============ -->
+    <section id="page-quiz" class="page hidden">
+      <div class="pcontent">
+
+        <div id="quiz-start">
+          <div class="glass-card quiz-intro-card">
+            <div class="qi-icon">⚔️</div>
+            <h1 class="qi-title">BOSS FIGHT</h1>
+            <p class="qi-sub">בחר קטגוריה ותוכח את עצמך</p>
+            <div class="qcat-btns">
+              <button class="qcat active" onclick="setQCat(this,'all')">🌟 הכל</button>
+              <button class="qcat" onclick="setQCat(this,'html')">🏗️ HTML</button>
+              <button class="qcat" onclick="setQCat(this,'css')">🎨 CSS</button>
+              <button class="qcat" onclick="setQCat(this,'js')">⚡ JS</button>
+            </div>
+            <div class="qi-rules">
+              <div class="qi-rule">⏱️ 30 שניות לשאלה</div>
+              <div class="qi-rule">🎯 15 שאלות</div>
+              <div class="qi-rule">⭐ XP על הצלחה</div>
+            </div>
+            <button class="btn-neon btn-lg" onclick="startQuiz()">
+              <span>START QUIZ ⚡</span>
+              <div class="btn-glow"></div>
+            </button>
+          </div>
+        </div>
+
+        <div id="quiz-active" class="hidden">
+          <div class="quiz-hud">
+            <div class="qhud-info">שאלה <span id="q-num">1</span>/<span id="q-tot">15</span></div>
+            <div class="qhud-timer" id="q-timer">30</div>
+            <div class="qhud-score">⭐ <span id="q-score">0</span></div>
+          </div>
+          <div class="qprogbar">
+            <div class="qprogfill" id="q-progfill"></div>
+          </div>
+          <div class="quiz-card glass-card" id="quiz-card">
+            <div class="q-cat-tag" id="q-cat-tag">HTML</div>
+            <h2 class="q-text" id="q-text"></h2>
+            <div class="q-answers" id="q-answers"></div>
+            <div class="q-feedback hidden" id="q-feedback"></div>
+            <button class="btn-neon hidden" id="q-next-btn" onclick="nextQ()">הבא →</button>
+          </div>
+        </div>
+
+        <div id="quiz-results" class="hidden">
+          <div class="glass-card results-card">
+            <div class="res-grade" id="res-grade">EXCELLENT!</div>
+            <div class="res-score"><span id="res-correct">0</span>/<span id="res-total">15</span></div>
+            <div class="res-pct" id="res-pct">0%</div>
+            <div class="res-xp">+<span id="res-xp">0</span> XP 🌟</div>
+            <div class="res-actions">
+              <button class="btn-neon" onclick="restartQuiz()">שחק שוב</button>
+              <button class="btn-neon btn-purple" onclick="go('home')">בית</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ============ SANDBOX ============ -->
+    <section id="page-sandbox" class="page hidden">
+      <div class="sandbox-wrap">
+        <div class="sb-header">
+          <span class="sb-title">🔧 Code Sandbox</span>
+          <div class="sb-tabs">
+            <button class="sbtab active" onclick="sbTab('html',this)">HTML</button>
+            <button class="sbtab" onclick="sbTab('css',this)">CSS</button>
+            <button class="sbtab" onclick="sbTab('js',this)">JS</button>
+          </div>
+          <div class="sb-actions">
+            <button class="btn-neon btn-sm btn-green" onclick="runSandbox()">▶ Run</button>
+            <button class="btn-xs" onclick="resetSandbox()">↺ Reset</button>
+            <button class="btn-xs" onclick="saveSandbox()">💾 Save</button>
+          </div>
+        </div>
+        <div class="sb-layout">
+          <div class="sb-editors">
+            <div id="sbe-html" class="sbe active">
+              <div class="sbe-label">HTML</div>
+              <textarea id="sb-html" spellcheck="false"></textarea>
+            </div>
+            <div id="sbe-css" class="sbe hidden">
+              <div class="sbe-label">CSS</div>
+              <textarea id="sb-css" spellcheck="false"></textarea>
+            </div>
+            <div id="sbe-js" class="sbe hidden">
+              <div class="sbe-label">JS</div>
+              <textarea id="sb-js" spellcheck="false"></textarea>
+            </div>
+          </div>
+          <div class="sb-preview">
+            <div class="sb-prev-hdr">
+              <span>תצוגה מקדימה</span>
+              <button class="btn-xs" onclick="fullPreview()">⛶</button>
+            </div>
+            <iframe id="sb-frame" sandbox="allow-scripts"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ADMIN ============ -->
+    <section id="page-admin" class="page hidden">
+      <div class="pcontent">
+        <div id="admin-wall" class="hidden">
+          <div class="glass-card center-card">
+            <div style="font-size:3rem">🔒</div>
+            <h2>גישה מוגבלת</h2>
+            <p>אין לך הרשאות Admin</p>
+            <button class="btn-neon" onclick="go('home')">חזור לבית</button>
+          </div>
+        </div>
+        <div id="admin-dash">
+          <div class="admin-hdr">
+            <h1>⚙️ Admin Dashboard</h1>
+            <div class="admin-tabs">
+              <button class="adtab active" onclick="adTab('overview',this)">📊 סקירה</button>
+              <button class="adtab" onclick="adTab('users',this)">👥 משתמשים</button>
+              <button class="adtab" onclick="adTab('logs',this)">🔍 לוגים</button>
+              <button class="adtab" onclick="adTab('broadcast',this)">📢 הודעות</button>
+            </div>
+          </div>
+
+          <div id="adt-overview" class="adt">
+            <div class="admin-stats">
+              <div class="ast glass-card">
+                <div class="ast-i">👥</div>
+                <div class="ast-v" id="ad-users">0</div>
+                <div class="ast-l">משתמשים</div>
+              </div>
+              <div class="ast glass-card">
+                <div class="ast-i">🟢</div>
+                <div class="ast-v" id="ad-online">0</div>
+                <div class="ast-l">אונליין</div>
+              </div>
+              <div class="ast glass-card">
+                <div class="ast-i">⏱️</div>
+                <div class="ast-v" id="ad-time">0m</div>
+                <div class="ast-l">זמן ממוצע</div>
+              </div>
+              <div class="ast glass-card">
+                <div class="ast-i">✅</div>
+                <div class="ast-v" id="ad-score">0%</div>
+                <div class="ast-l">הצלחה</div>
+              </div>
+            </div>
+            <div class="charts-row">
+              <div class="glass-card chart-wrap">
+                <h3>פעילות</h3><canvas id="chart-activity"></canvas>
+              </div>
+              <div class="glass-card chart-wrap">
+                <h3>ציונים</h3><canvas id="chart-scores"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div id="adt-users" class="adt hidden">
+            <div class="admin-search"><input id="usr-search" type="text" placeholder="חפש משתמש..."
+                oninput="searchUsers(this.value)"></div>
+            <div class="table-wrap">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th>שם</th>
+                    <th>אימייל</th>
+                    <th>רמה</th>
+                    <th>XP</th>
+                    <th>ציון</th>
+                    <th>פעיל</th>
+                    <th>פעולות</th>
+                  </tr>
+                </thead>
+                <tbody id="users-tbody">
+                  <tr>
+                    <td colspan="7" class="tc">טוען...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="adt-logs" class="adt hidden">
+            <div class="logs-box" id="logs-box">
+              <div class="spin"></div>
+            </div>
+          </div>
+
+          <div id="adt-broadcast" class="adt hidden">
+            <div class="glass-card" style="max-width:600px;margin:0 auto">
+              <h3>שלח הודעה לכל המשתמשים</h3>
+              <textarea id="bc-msg" rows="4" placeholder="כתוב הודעה..."></textarea>
+              <button class="btn-neon" onclick="broadcastMsg()">שלח 📢</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROFILE ============ -->
+    <section id="page-profile" class="page hidden">
+      <div class="pcontent">
+        <div class="glass-card profile-card">
+          <button class="btn-back" onclick="go('home')">← חזרה</button>
+          <div class="profile-avatar-lg" id="pf-avatar">?</div>
+          <h2 id="pf-name">Player</h2>
+          <div class="pf-email" id="pf-email"></div>
+          <div class="pf-stats">
+            <div class="pf-s"><span class="pf-sv" id="pf-lv">1</span><span class="pf-sl">רמה</span></div>
+            <div class="pf-s"><span class="pf-sv" id="pf-xp">0</span><span class="pf-sl">XP</span></div>
+            <div class="pf-s"><span class="pf-sv" id="pf-lessons">0</span><span class="pf-sl">שיעורים</span></div>
+            <div class="pf-s"><span class="pf-sv" id="pf-quizzes">0</span><span class="pf-sl">מבחנים</span></div>
+          </div>
+          <div class="pf-ach-ttl">הישגים</div>
+          <div class="ach-grid" id="pf-ach-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ACHIEVEMENTS ============ -->
+    <section id="page-achievements" class="page hidden">
+      <div class="pcontent">
+        <div class="page-hdr">
+          <button class="btn-back" onclick="go('home')">← חזרה</button>
+          <h1 class="page-ttl">🎖️ הישגים</h1>
+        </div>
+        <div class="ach-full-grid" id="ach-full-grid"></div>
+      </div>
+    </section>
+
+  </div><!-- end main-app -->
+
+  <!-- AI WIDGET -->
+  <div id="ai-widget">
+    <button class="ai-btn" onclick="toggleAI()">
+      🤖<span class="ai-pulse"></span>
+    </button>
+    <div id="ai-panel" class="hidden glass-card">
+      <div class="ai-hdr">
+        <div class="ai-avatar-sm">🤖</div>
+        <div>
+          <div class="ai-name">NOVA AI</div>
+          <div class="ai-st">מוכן לעזור</div>
+        </div>
+        <button onclick="toggleAI()" class="ai-x">✕</button>
+      </div>
+      <div class="ai-msgs" id="ai-msgs">
+        <div class="ai-msg bot">שלום! אני NOVA, העוזר החכם שלך 🚀<br>שאל אותי על HTML, CSS, JavaScript!</div>
+      </div>
+      <div class="ai-inp">
+        <input type="text" id="ai-input" placeholder="שאל אותי..." onkeydown="if(event.key==='Enter')sendAI()">
+        <button onclick="sendAI()">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
