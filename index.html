@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEON CYBER — פלטפורמת לימוד תכנות</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rubik:wght@300;400;500;700&display=swap"
@@ -2220,7 +2221,7 @@ button:hover {
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import {
             getFirestore, doc, setDoc, getDoc, updateDoc, collection,
-            getDocs, serverTimestamp
+            getDocs, serverTimestamp, enableIndexedDbPersistence
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -2234,54 +2235,100 @@ button:hover {
             measurementId: "G-CE0BWBJ6DJ"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        let app, auth, db;
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
 
-        // Expose globally
-        window.fbAuth = auth;
-        window.fbDb = db;
-        window.fbDoc = doc;
-        window.fbSetDoc = setDoc;
-        window.fbGetDoc = getDoc;
-        window.fbUpdateDoc = updateDoc;
-        window.fbCollection = collection;
-        window.fbGetDocs = getDocs;
-        window.fbServerTimestamp = serverTimestamp;
-        window.fbSignIn = signInWithEmailAndPassword;
-        window.fbSignUp = createUserWithEmailAndPassword;
-        window.fbSignOut = signOut;
-        window.fbOnAuth = onAuthStateChanged;
+            // Enable offline persistence (cache data locally)
+            enableIndexedDbPersistence(db).catch(e => {
+                if (e.code === 'failed-precondition') console.warn('Persistence: multiple tabs open');
+                else if (e.code === 'unimplemented') console.warn('Persistence: not supported');
+            });
+        } catch (e) {
+            console.warn('Firebase init failed, running in demo mode:', e);
+            window._demoMode = true;
+        }
 
-        // Monitor auth state
-        onAuthStateChanged(auth, user => {
-            if (user) {
-                window.currentUser = user;
-                loadUserData(user.uid);
-            }
-        });
+        // Expose globals only if Firebase initialized successfully
+        if (!window._demoMode) {
+            window.fbAuth = auth;
+            window.fbDb = db;
+            window.fbDoc = doc;
+            window.fbSetDoc = setDoc;
+            window.fbGetDoc = getDoc;
+            window.fbUpdateDoc = updateDoc;
+            window.fbCollection = collection;
+            window.fbGetDocs = getDocs;
+            window.fbServerTimestamp = serverTimestamp;
+            window.fbSignIn = signInWithEmailAndPassword;
+            window.fbSignUp = createUserWithEmailAndPassword;
+            window.fbSignOut = signOut;
+            window.fbOnAuth = onAuthStateChanged;
+        }
 
+        // ─── loadUserData ──────────────────────────────────────────────────────────
         async function loadUserData(uid) {
+            if (window._demoMode || !db) {
+                // Demo fallback - use cached local data if available
+                const cached = localStorage.getItem('nc_user_' + uid);
+                if (cached) {
+                    try {
+                        const d = JSON.parse(cached);
+                        window.userData = d;
+                        // Wait for DOM + syncUserUI to be ready
+                        if (typeof window.syncUserUI === 'function') window.syncUserUI(d);
+                        else window.addEventListener('neon_ready', () => window.syncUserUI(d));
+                    } catch(e) {}
+                }
+                return;
+            }
             try {
                 const snap = await getDoc(doc(db, 'users', uid));
                 if (snap.exists()) {
                     const d = snap.data();
                     window.userData = d;
-                    window.syncUserUI(d);
+                    // Cache locally for offline fallback
+                    try { localStorage.setItem('nc_user_' + uid, JSON.stringify(d)); } catch(e) {}
+                    if (typeof window.syncUserUI === 'function') window.syncUserUI(d);
+                    else window.addEventListener('neon_ready', () => window.syncUserUI(d));
                 }
-            } catch (e) { console.warn('Firestore read:', e); }
+            } catch (e) {
+                console.warn('Firestore read:', e);
+                // Offline fallback - use local cache
+                const cached = localStorage.getItem('nc_user_' + uid);
+                if (cached) {
+                    try {
+                        const d = JSON.parse(cached);
+                        window.userData = d;
+                        if (typeof window.syncUserUI === 'function') window.syncUserUI(d);
+                        else window.addEventListener('neon_ready', () => window.syncUserUI(d));
+                    } catch(e2) {}
+                }
+            }
         }
         window.loadUserData = loadUserData;
 
+        // ─── saveUserData ──────────────────────────────────────────────────────────
         async function saveUserData(uid, data) {
+            // Always save to localStorage first as a reliable cache
+            try {
+                const existing = JSON.parse(localStorage.getItem('nc_user_' + uid) || '{}');
+                const merged = { ...existing, ...data };
+                localStorage.setItem('nc_user_' + uid, JSON.stringify(merged));
+            } catch(e) {}
+
+            if (window._demoMode || !db) return;
             try {
                 await setDoc(doc(db, 'users', uid), data, { merge: true });
             } catch (e) { console.warn('Firestore write:', e); }
         }
         window.saveUserData = saveUserData;
 
-        // Log security event
+        // ─── logSecEvent ───────────────────────────────────────────────────────────
         async function logSecEvent(type, msg) {
+            if (window._demoMode || !db || !auth) return;
             try {
                 const uid = auth.currentUser?.uid || 'anon';
                 const ref = doc(collection(db, 'sec_logs'));
@@ -2293,6 +2340,16 @@ button:hover {
             } catch (e) { }
         }
         window.logSecEvent = logSecEvent;
+
+        // ─── Monitor auth state ────────────────────────────────────────────────────
+        if (!window._demoMode && auth) {
+            onAuthStateChanged(auth, user => {
+                if (user) {
+                    window.currentUser = user;
+                    window.loadUserData(user.uid);
+                }
+            });
+        }
     </script>
 
     <script>
@@ -2433,37 +2490,61 @@ button:hover {
             syncUserUI(state);
             if (reason) toast('⭐', '+' + amount + ' XP', reason);
             if (window.currentUser && window.saveUserData) {
-                window.saveUserData(window.currentUser.uid, { xp: state.xp, level: state.level });
+                window.saveUserData(window.currentUser.uid, {
+                    xp: state.xp,
+                    level: state.level,
+                    name: state.name,
+                    streak: state.streak,
+                    lessonsCompleted: state.lessonsCompleted,
+                    quizScore: state.quizScore
+                });
             }
         }
         window.addXP = addXP;
 
         window.syncUserUI = function (d) {
-            if (d.xp !== undefined) { state.xp = d.xp; state.level = d.level || 1; }
+            // Merge incoming data into state
+            if (d.xp !== undefined) state.xp = d.xp;
+            if (d.level !== undefined) state.level = d.level;
+            if (d.name) state.name = d.name;
+            if (d.streak !== undefined) state.streak = d.streak;
+            if (d.lessonsCompleted !== undefined) state.lessonsCompleted = d.lessonsCompleted;
+            if (d.quizScore !== null && d.quizScore !== undefined) state.quizScore = d.quizScore;
+
+            // Level-up check (only once per call, prevents infinite loop)
+            const xpForLevel = state.level * 1000;
+            if (state.xp >= xpForLevel) {
+                state.xp -= xpForLevel;
+                state.level++;
+                setTimeout(() => toast('🚀', 'LEVEL UP!', 'ברכות! הגעת לרמה ' + state.level), 100);
+                // Save new level
+                if (window.currentUser && window.saveUserData) {
+                    window.saveUserData(window.currentUser.uid, { xp: state.xp, level: state.level });
+                }
+            }
+
+            const xpForCurrentLevel = state.level * 1000;
+            const pct = Math.min((state.xp / xpForCurrentLevel) * 100, 100);
+
             const xpEl = document.getElementById('user-xp');
             const lvlEl = document.getElementById('user-level');
             const bar = document.getElementById('xp-bar');
             const stXP = document.getElementById('stat-total-xp');
-
-            if (d.name) { state.name = d.name; }
             const nameEl = document.getElementById('user-name');
-            if (nameEl && d.name) nameEl.innerText = d.name;
 
-            const xpForLevel = state.level * 1000;
-            const pct = Math.min((state.xp / xpForLevel) * 100, 100);
-
-            // Level up check
-            if (state.xp >= xpForLevel) {
-                state.level++; state.xp -= xpForLevel;
-                toast('🚀', 'LEVEL UP!', 'ברכות! הגעת לרמה ' + state.level);
-            }
-
+            if (nameEl && state.name) nameEl.innerText = state.name;
             if (xpEl) xpEl.innerText = state.xp;
             if (lvlEl) lvlEl.innerText = state.level;
             if (bar) bar.style.width = pct + '%';
             if (stXP) stXP.innerText = state.xp;
-            if (document.getElementById('stat-lessons')) document.getElementById('stat-lessons').innerText = state.lessonsCompleted;
-            if (document.getElementById('stat-streak')) document.getElementById('stat-streak').innerText = state.streak;
+
+            const statLessons = document.getElementById('stat-lessons');
+            const statStreak = document.getElementById('stat-streak');
+            const statQuiz = document.getElementById('stat-quiz');
+
+            if (statLessons) statLessons.innerText = state.lessonsCompleted;
+            if (statStreak) statStreak.innerText = state.streak;
+            if (statQuiz) statQuiz.innerText = state.quizScore !== null ? state.quizScore + '%' : '—';
         };
 
         function claimDaily() {
@@ -3048,9 +3129,18 @@ skills.forEach(s => console.log(s)); // לולאה</div>
                         window.currentUser = cred.user;
                         await window.loadUserData(cred.user.uid);
                     } else {
-                        // Demo mode
-                        state.name = 'CyberPlayer';
-                        window.syncUserUI(state);
+                        // Demo mode - try to load cached data for this phone
+                        const demoUid = 'demo_' + phone.replace(/\D/g, '');
+                        const cached = localStorage.getItem('nc_user_' + demoUid);
+                        if (cached) {
+                            const d = JSON.parse(cached);
+                            window.userData = d;
+                            window.syncUserUI(d);
+                            window.currentUser = { uid: demoUid };
+                        } else {
+                            state.name = 'CyberPlayer';
+                            window.syncUserUI(state);
+                        }
                     }
                     hideLoad();
                     goto('#larn');
@@ -3067,24 +3157,28 @@ skills.forEach(s => console.log(s)); // לולאה</div>
                 const phone = document.getElementById('rphone').value;
                 const pw = document.getElementById('rpw').value;
                 try {
-                    let uid = 'local_' + Date.now();
+                    let uid;
+                    const newUserData = {
+                        name, phone, xp: 100, level: 1,
+                        lessonsCompleted: 0, streak: 1, quizScore: null,
+                        createdAt: new Date().toISOString()
+                    };
                     if (window.fbAuth && window.fbSignUp) {
                         const cred = await window.fbSignUp(window.fbAuth, phoneToEmail(phone), pw);
                         uid = cred.user.uid;
                         window.currentUser = cred.user;
-                        await window.saveUserData(uid, {
-                            name, phone, xp: 100, level: 1,
-                            lessonsCompleted: 0, streak: 1,
-                            createdAt: window.fbServerTimestamp ? window.fbServerTimestamp() : new Date().toISOString()
-                        });
+                        if (window.fbServerTimestamp) newUserData.createdAt = window.fbServerTimestamp();
+                        await window.saveUserData(uid, newUserData);
                         await window.loadUserData(uid);
                     } else {
-                        state.name = name;
-                        window.syncUserUI(state);
+                        // Demo mode - save to localStorage
+                        uid = 'demo_' + phone.replace(/\D/g, '');
+                        window.currentUser = { uid };
+                        window.userData = newUserData;
+                        localStorage.setItem('nc_user_' + uid, JSON.stringify(newUserData));
+                        window.syncUserUI(newUserData);
                     }
                     hideLoad();
-                    document.getElementById('user-name').innerText = name;
-                    state.name = name;
                     goto('#larn');
                     addXP(100, 'הרשמה חדשה! ברוך הבא');
                     toast('🚀', 'שחקן חדש!', `ברוך הבא ${name}! +100 XP`);
@@ -3237,6 +3331,9 @@ skills.forEach(s => console.log(s)); // לולאה</div>
             initSandbox();
             initAI();
             initAdmin();
+
+            // Signal to Firebase module that syncUserUI is ready
+            window.dispatchEvent(new Event('neon_ready'));
 
             // Hash navigation for action cards
             window.addEventListener('hashchange', () => {
